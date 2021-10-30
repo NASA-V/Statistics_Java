@@ -151,6 +151,30 @@ public class Regression_Analysis extends JFrame {
 
     }
 
+    public void insertAll_Series(double _X, double _Y) {
+
+        String sql = "INSERT INTO All_Series VALUES(?,?,?);";
+
+        Connection conn = this.connect();
+
+        PreparedStatement pstmt = null;
+        try {
+            pstmt = conn.prepareStatement(sql);
+
+            pstmt.setDouble(1, this.counter);
+            pstmt.setDouble(2, _X);
+            pstmt.setDouble(3, _Y);
+            pstmt.executeUpdate();
+
+            pstmt.close();
+            conn.close();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     private void createtable() {
         String[] column = new String[]{"X", "Y"};
         this.model = new DefaultTableModel(null, column) {
@@ -195,29 +219,6 @@ public class Regression_Analysis extends JFrame {
             e.printStackTrace();
         }
         return conn;
-    }
-
-    public void insertAll_Series(double _X, double _Y) {
-        String sql = "INSERT INTO All_Series VALUES(?,?,?);";
-
-        Connection conn = this.connect();
-
-        PreparedStatement pstmt = null;
-        try {
-            pstmt = conn.prepareStatement(sql);
-
-            pstmt.setDouble(1, this.counter);
-            pstmt.setDouble(2, _X);
-            pstmt.setDouble(3, _Y);
-            pstmt.executeUpdate();
-
-            pstmt.close();
-            conn.close();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
     }
 
     public void dumptables() {
