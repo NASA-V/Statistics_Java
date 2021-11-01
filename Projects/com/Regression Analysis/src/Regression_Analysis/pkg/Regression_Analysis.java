@@ -17,9 +17,13 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Vector;
 
+import static java.sql.DriverManager.getConnection;
+
+
 public class Regression_Analysis extends JFrame {
     public static Regression_Analysis Regression_Analysis;
-    public final String Connection_String = "jdbc:sqlite:C:/Users/Diego Angulo/Documents/Java Projects/Personal Projects/Projects/com/Regression Analysis/Databases/Database.db";
+//    public final String Connection_String = "jdbc:sqlite:database.db";
+    public final String Connection_String = "jdbc:sqlite::memory:";
     public JTable tblDataset;
     public Vector<String> Datasetlist;
     public ArrayList<String> List_Series_Name;
@@ -47,14 +51,12 @@ public class Regression_Analysis extends JFrame {
         listeners();
         disableComponents();
         createtable();
-//        setResizable(true);
         ImageIcon icon = new ImageIcon(Objects.requireNonNull(getClass().getResource("Resources/Image/007-boar.png")));
         setIconImage(icon.getImage());
-
-
     }
 
     public static void main(String[] args) {
+
         try {
             UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
         } catch (UnsupportedLookAndFeelException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
@@ -63,6 +65,7 @@ public class Regression_Analysis extends JFrame {
 
         JDialog.setDefaultLookAndFeelDecorated(true);
         Regression_Analysis = new Regression_Analysis();
+
         Regression_Analysis.pack();
         Regression_Analysis.setLocationRelativeTo(null);
         Regression_Analysis.setDefaultCloseOperation(3);
@@ -96,8 +99,12 @@ public class Regression_Analysis extends JFrame {
         contentPane.registerKeyboardAction((e) -> {
             onCancel();
         }, KeyStroke.getKeyStroke(27, 0), 1);
-        btnAdd_Entry.addActionListener((e) -> {
-            onAdd_Entry();
+
+        btnAdd_Entry.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onAdd_Entry();
+            }
         });
 
         cmbDatasetList.addActionListener(new ActionListener() {
@@ -109,15 +116,23 @@ public class Regression_Analysis extends JFrame {
 
         btnAddSeries.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                int x = JOptionPane.showConfirmDialog(Regression_Analysis, "Create Series?", "Series", 2, 3);
-                if (x == 0) {
-                    ++counter;
-                    String Series_Name = JOptionPane.showInputDialog(Regression_Analysis, "Enter Series", "Series Name", 3);
-                    cmbSeriesList.setEnabled(true);
-                    cmbSeriesList.addItem(Series_Name);
-                    model.setRowCount(0);
-                    btnAdd_Entry.setEnabled(true);
-                    btnGenerate.setEnabled(true);
+                if (tblDataset.getRowCount() >=2){
+                    insertSeriesName();
+
+                    int x = JOptionPane.showConfirmDialog(Regression_Analysis, "Create Series?", "Series", 2, 3);
+                    if (x == 0) {
+                        ++counter;
+                        String Series_Name = JOptionPane.showInputDialog(Regression_Analysis, "Enter Series", "Series Name", 3);
+                        cmbSeriesList.setEnabled(true);
+                        cmbSeriesList.addItem(Series_Name);
+                        model.setRowCount(0);
+
+                        btnGenerate.setEnabled(true);
+                        JOptionPane.showMessageDialog(null,"table created");
+                }
+
+                }else {
+                    JOptionPane.showMessageDialog(Regression_Analysis, "Table must be filled before creating a series");
                 }
 
             }
@@ -130,17 +145,58 @@ public class Regression_Analysis extends JFrame {
                     insertDatalist(Dataset);
                     cmbDatasetList.addItem(Dataset);
                     btnAddSeries.setEnabled(true);
+                    btnAdd_Entry.setEnabled(true);
                     cmbDatasetList.setEnabled(true);
                 }
             }
         });
     }
 
+    public void insertSeriesName(){
+        try{
+            Connection conn = this.connect();
+            Statement stmt = conn.createStatement();
+            ResultSet res = stmt.executeQuery("SELECT name from sqlite_master where type='table' and name = 'All_Series'");
+            if(!res.next()){
+                stmt.execute("create table All_Series(_id INT default 1,_X  DOUBLE precision,_Y  DOUBLE precision)");
+//                stmt.execute("create table Datalist(Dataset_Name TEXT not null,'Group Name' INTEGER primary key autoincrement)");
+            }
+            PreparedStatement preparedStatement = conn.prepareStatement("INSERT INTO All_Series VALUES (?,?,?)");
+            preparedStatement.setDouble(1,this.counter);
+            double x;
+            double y;
+
+
+            for (int i = 0; i < tblDataset.getRowCount(); i++) {
+                x = Double.parseDouble(tblDataset.getValueAt(i, 0).toString());
+                y = Double.parseDouble(tblDataset.getValueAt(i, 1).toString());
+
+
+                String query = "insert into All_Series values(?,?,?)";
+                PreparedStatement statement = conn.prepareStatement(query);
+                statement.setDouble(1, this.counter);
+                statement.setDouble(2, x);
+                statement.setDouble(3, y);
+                statement.executeUpdate();
+            }
+
+            res.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void insertDatalist(String Dataset) {
-        String sql = "INSERT INTO Datalist(Dataset_Name) VALUES(?);";
         try {
             Connection conn = this.connect();
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+            Statement stmt = conn.createStatement();
+            ResultSet res = stmt.executeQuery("SELECT name from sqlite_master where type='table' and name = 'Datalist'");
+            if(!res.next()){
+                stmt.execute("create table Datalist(Dataset_Name TEXT not null,'Group Name' INTEGER primary key autoincrement)");
+            }
+            PreparedStatement pstmt = conn.prepareStatement("INSERT INTO Datalist(Dataset_Name) VALUES(?)");
             pstmt.setString(1, Dataset);
             pstmt.executeUpdate();
             pstmt.close();
@@ -151,15 +207,15 @@ public class Regression_Analysis extends JFrame {
 
     }
 
+
     public void insertAll_Series(double _X, double _Y) {
 
-        String sql = "INSERT INTO All_Series VALUES(?,?,?);";
+        try {
+        String sql = "INSERT INTO All_Series VALUES(?,?,?)";
 
         Connection conn = this.connect();
 
-        PreparedStatement pstmt = null;
-        try {
-            pstmt = conn.prepareStatement(sql);
+        PreparedStatement pstmt = conn.prepareStatement(sql);
 
             pstmt.setDouble(1, this.counter);
             pstmt.setDouble(2, _X);
@@ -174,7 +230,6 @@ public class Regression_Analysis extends JFrame {
         }
 
     }
-
     private void createtable() {
         String[] column = new String[]{"X", "Y"};
         this.model = new DefaultTableModel(null, column) {
@@ -214,7 +269,8 @@ public class Regression_Analysis extends JFrame {
         Connection conn = null;
         try {
             DriverManager.registerDriver(new JDBC());
-            conn = DriverManager.getConnection(Connection_String);
+            conn = getConnection(Connection_String);
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -225,9 +281,12 @@ public class Regression_Analysis extends JFrame {
         try {
             Connection conn = this.connect();
             Statement stmt = conn.createStatement();
-            stmt.execute("DELETE FROM All_Series ;");
-            stmt.execute("DELETE FROM Series_Information ;");
-            stmt.execute("DELETE FROM Datalist ;");
+
+//            stmt.execute("delete table  All_Series;");
+            stmt.execute("DROP TABLE IF EXISTS All_Series");
+            stmt.execute("DROP TABLE IF EXISTS Series_Information");
+            stmt.execute("DROP TABLE IF EXISTS Datalist");
+            stmt.close();
             conn.close();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -237,7 +296,7 @@ public class Regression_Analysis extends JFrame {
 
     private void onAdd_Entry() {
         if (!tfXaxis.getText().isEmpty() && !tfYaxis.getText().isEmpty()) {
-            insertAll_Series(Double.parseDouble(tfXaxis.getText()), Double.parseDouble(tfYaxis.getText()));
+//            insertAll_Series(Double.parseDouble(tfXaxis.getText()), Double.parseDouble(tfYaxis.getText()));
             Object[] row = new Object[]{Double.parseDouble(tfXaxis.getText()), Double.parseDouble(tfYaxis.getText())};
             model.addRow(row);
             tfXaxis.setText("0");
