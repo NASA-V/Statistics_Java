@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Projects/com/Database/src/Database/Database.iml" filepath="$PROJECT_DIR$/Projects/com/Database/src/Database/Database.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Projects/com/Demo/Demo.iml" filepath="$PROJECT_DIR$/Projects/com/Demo/Demo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Projects/com/Regression Analysis/Regression Analysis.iml" filepath="$PROJECT_DIR$/Projects/com/Regression Analysis/Regression Analysis.iml" />
+    </modules>
+  </component>
+</project>

@@ -22,7 +22,7 @@ import static java.sql.DriverManager.getConnection;
 
 public class Regression_Analysis extends JFrame {
     public static Regression_Analysis Regression_Analysis;
-//    public final String Connection_String = "jdbc:sqlite:database.db";
+    //    public final String Connection_String = "jdbc:sqlite:database.db";
     public final String Connection_String = "jdbc:sqlite::memory:";
     public JTable tblDataset;
     public Vector<String> Datasetlist;
@@ -116,7 +116,7 @@ public class Regression_Analysis extends JFrame {
 
         btnAddSeries.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if (tblDataset.getRowCount() >=2){
+                if (tblDataset.getRowCount() >= 2) {
                     insertSeriesName();
 
                     int x = JOptionPane.showConfirmDialog(Regression_Analysis, "Create Series?", "Series", 2, 3);
@@ -128,10 +128,10 @@ public class Regression_Analysis extends JFrame {
                         model.setRowCount(0);
 
                         btnGenerate.setEnabled(true);
-                        JOptionPane.showMessageDialog(null,"table created");
-                }
+                        JOptionPane.showMessageDialog(Regression_Analysis, "table created");
+                    }
 
-                }else {
+                } else {
                     JOptionPane.showMessageDialog(Regression_Analysis, "Table must be filled before creating a series");
                 }
 
@@ -152,17 +152,17 @@ public class Regression_Analysis extends JFrame {
         });
     }
 
-    public void insertSeriesName(){
-        try{
+    public void insertSeriesName() {
+        try {
             Connection conn = this.connect();
             Statement stmt = conn.createStatement();
             ResultSet res = stmt.executeQuery("SELECT name from sqlite_master where type='table' and name = 'All_Series'");
-            if(!res.next()){
+            if (!res.next()) {
                 stmt.execute("create table All_Series(_id INT default 1,_X  DOUBLE precision,_Y  DOUBLE precision)");
 //                stmt.execute("create table Datalist(Dataset_Name TEXT not null,'Group Name' INTEGER primary key autoincrement)");
             }
             PreparedStatement preparedStatement = conn.prepareStatement("INSERT INTO All_Series VALUES (?,?,?)");
-            preparedStatement.setDouble(1,this.counter);
+            preparedStatement.setDouble(1, this.counter);
             double x;
             double y;
 
@@ -193,7 +193,7 @@ public class Regression_Analysis extends JFrame {
             Connection conn = this.connect();
             Statement stmt = conn.createStatement();
             ResultSet res = stmt.executeQuery("SELECT name from sqlite_master where type='table' and name = 'Datalist'");
-            if(!res.next()){
+            if (!res.next()) {
                 stmt.execute("create table Datalist(Dataset_Name TEXT not null,'Group Name' INTEGER primary key autoincrement)");
             }
             PreparedStatement pstmt = conn.prepareStatement("INSERT INTO Datalist(Dataset_Name) VALUES(?)");
@@ -211,11 +211,11 @@ public class Regression_Analysis extends JFrame {
     public void insertAll_Series(double _X, double _Y) {
 
         try {
-        String sql = "INSERT INTO All_Series VALUES(?,?,?)";
+            String sql = "INSERT INTO All_Series VALUES(?,?,?)";
 
-        Connection conn = this.connect();
+            Connection conn = this.connect();
 
-        PreparedStatement pstmt = conn.prepareStatement(sql);
+            PreparedStatement pstmt = conn.prepareStatement(sql);
 
             pstmt.setDouble(1, this.counter);
             pstmt.setDouble(2, _X);
